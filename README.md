@@ -31,6 +31,25 @@ python -m keiba_ai 202605021711 --interactive
 `race_id` は netkeiba の出馬表 URL に含まれる12桁の数字です
 (`https://race.netkeiba.com/race/shutuba.html?race_id=**202605021711**`)。
 
+必須の依存は `requests` と `beautifulsoup4` だけです。`lxml` は入っていれば解析に使いますが、
+C拡張のためホイールが無い環境(スマートフォンなど)ではインストールできないことがあります。
+その場合は標準ライブラリの `html.parser` に自動で切り替わるので、そのまま動きます。
+
+```bash
+# lxml が入らない環境ではこれで十分
+pip install requests beautifulsoup4
+```
+
+### スマートフォンで動かす
+
+* **Android** — [Termux](https://termux.dev/) で `pkg install python` → 上記の pip。そのまま全機能が使えます。
+* **iOS** — [a-Shell](https://holzschu.github.io/a-Shell_iOS/) に Python 3 と pip が同梱されています。
+  `lxml` は入らないことが多いですが、前述のフォールバックで動きます。
+* **ブラウザだけで済ませる** — Google Colab などで `!pip install -r requirements.txt` →
+  `!python -m keiba_ai ...`。端末に何も入れずに試せます。
+
+画面が狭いので、テキスト表(【7】全頭評価一覧)は横向きにするか `--markdown` / `--json` を使ってください。
+
 ---
 
 ## 馬場傾向の入力
@@ -302,6 +321,7 @@ python -m pytest tests/ -q
 * 確率値は過去の統計を踏まえたヒューリスティックであり、実測データでキャリブレーション
   したものではありません。相対比較の目安として使ってください。
 * 地方競馬・海外レースは馬柱側でクラス格を「地方」として一律に扱います。
+* テキスト出力は横78桁を前提にしています。狭い画面では `--markdown` か `--json` が読みやすいです。
 
 ## 注意
 

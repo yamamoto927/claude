@@ -4,9 +4,8 @@ from __future__ import annotations
 import datetime as dt
 import re
 
-from bs4 import BeautifulSoup
-
 from ..models import Horse, RaceInfo, to_float, to_int
+from .client import make_soup
 
 SHUTUBA_URL = "https://race.netkeiba.com/race/shutuba.html?race_id={race_id}"
 ODDS_API_URL = (
@@ -61,7 +60,7 @@ def _venue_from_race_id(race_id: str) -> str:
     return VENUE_CODES.get(race_id[4:6], "") if len(race_id) >= 6 else ""
 
 
-def _parse_race_header(soup: BeautifulSoup, race_id: str) -> RaceInfo:
+def _parse_race_header(soup, race_id: str) -> RaceInfo:
     info = RaceInfo(race_id=race_id, url=shutuba_url(race_id) if race_id else "")
 
     name_el = soup.select_one(".RaceName")
@@ -214,9 +213,11 @@ def _parse_horse_row(row) -> Horse | None:
     )
 
 
-def parse_shutuba(html: str, race_id: str = "") -> tuple[RaceInfo, list[Horse]]:
+def parse_shutuba(
+    html: str, race_id: str = "", parser: str | None = None
+) -> tuple[RaceInfo, list[Horse]]:
     """出馬表 HTML から (レース情報, 出走馬リスト) を返す。"""
-    soup = BeautifulSoup(html, "lxml")
+    soup = make_soup(html, parser)
     info = _parse_race_header(soup, race_id)
 
     rows = soup.select("tr.HorseList")

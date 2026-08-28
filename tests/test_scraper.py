@@ -2,7 +2,7 @@ import datetime as dt
 
 from conftest import FIXTURES, fixture
 
-from keiba_ai.scraper.client import NetkeibaClient, decode_html
+from keiba_ai.scraper.client import HTML_PARSER, NetkeibaClient, decode_html
 from keiba_ai.scraper.horse import parse_horse_results
 from keiba_ai.scraper.shutuba import parse_odds_api, parse_shutuba
 
@@ -108,6 +108,21 @@ def test_parse_horse_results_skips_cancelled_race():
 
 def test_parse_horse_results_limit():
     assert len(parse_horse_results(fixture("horse_results.html"), limit=2)) == 2
+
+
+def test_html_parser_fallback_gives_same_result():
+    """lxml が無い環境でも標準の html.parser で同じ結果になる。"""
+    html = fixture("shutuba_sample.html")
+    race_a, horses_a = parse_shutuba(html, "202605020711", parser=HTML_PARSER)
+    race_b, horses_b = parse_shutuba(html, "202605020711", parser="html.parser")
+    assert (race_a.name, race_a.distance, race_a.condition) == (race_b.name, race_b.distance, race_b.condition)
+    assert [(h.umaban, h.name, h.odds, h.jockey) for h in horses_a] == \
+           [(h.umaban, h.name, h.odds, h.jockey) for h in horses_b]
+
+    runs_a = parse_horse_results(fixture("horse_results.html"), parser=HTML_PARSER)
+    runs_b = parse_horse_results(fixture("horse_results.html"), parser="html.parser")
+    assert [(r.date, r.finish, r.last3f, r.grade) for r in runs_a] == \
+           [(r.date, r.finish, r.last3f, r.grade) for r in runs_b]
 
 
 def test_offline_client_reads_saved_html(tmp_path):

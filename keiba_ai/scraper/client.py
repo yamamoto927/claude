@@ -11,6 +11,7 @@ netkeiba は個人利用の範囲を超えた自動収集を禁じている。�
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import json
 import logging
 import os
@@ -20,8 +21,19 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import requests
+from bs4 import BeautifulSoup
 
 log = logging.getLogger(__name__)
+
+#: lxml があれば速いので使い、無ければ標準ライブラリの html.parser に落とす。
+#: lxml は C 拡張のため、スマートフォンなどホイールが用意されていない環境では
+#: インストールできないことがある。そこで必須依存にはしていない。
+HTML_PARSER = "lxml" if importlib.util.find_spec("lxml") else "html.parser"
+
+
+def make_soup(html: str, parser: str | None = None) -> BeautifulSoup:
+    """HTML を BeautifulSoup にする。利用可能なパーサを自動で選ぶ。"""
+    return BeautifulSoup(html, parser or HTML_PARSER)
 
 USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "

@@ -8,9 +8,8 @@ from __future__ import annotations
 import datetime as dt
 import re
 
-from bs4 import BeautifulSoup
-
 from ..models import PastRun, to_float, to_int
+from .client import make_soup
 from .shutuba import classify
 
 HORSE_URL = "https://db.netkeiba.com/horse/{horse_id}/"
@@ -120,9 +119,11 @@ def _infer_grade(cell, race_name: str, prize: float, venue: str) -> str:
     return ""
 
 
-def parse_horse_results(html: str, limit: int | None = None) -> list[PastRun]:
+def parse_horse_results(
+    html: str, limit: int | None = None, parser: str | None = None
+) -> list[PastRun]:
     """馬の全成績テーブルを ``PastRun`` のリストにする(新しい順)。"""
-    soup = BeautifulSoup(html, "lxml")
+    soup = make_soup(html, parser)
     table = soup.select_one("table.db_h_race_results") or soup.select_one("table.nk_tb_common")
     if table is None:
         return []
