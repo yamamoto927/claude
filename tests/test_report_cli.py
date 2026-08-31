@@ -73,6 +73,61 @@ def test_dangerous_favorites_are_not_also_picks(analysis):
     assert not any(id(e) in dangerous for e in analysis.favorites_pick)
 
 
+def _all_plans():
+    """堅い〜大波乱まで、全ての買い目分岐を実際に組ませる。"""
+    from keiba_ai.analysis.betting import build_bets
+    from keiba_ai.analysis.darkhorse import (
+        compute_dark_index, pick_dangerous_favorites, pick_dark_horses, pick_favorites,
+    )
+    from keiba_ai.analysis.features import apply_market_scores, evaluate_horse
+    from keiba_ai.analysis.pace import detect_style
+    from keiba_ai.models import PaceForecast, TrackBias
+
+    race, horses = build_sample()
+    evs = [
+        evaluate_horse(h, race, TrackBias(), PaceForecast(), detect_style(h), "良", len(horses))
+        for h in horses
+    ]
+    apply_market_scores(evs)
+    mean_ability = compute_dark_index(evs)
+    dangerous = pick_dangerous_favorites(evs)
+    favorites = pick_favorites(evs, 2, exclude=dangerous)
+    out = []
+    for chaos in (20.0, 42.9, 43.0, 59.9, 60.0, 85.0):
+        darks = pick_dark_horses(evs, 3 if chaos >= 50 else 1, mean_ability)
+        out.extend(build_bets(chaos, favorites, darks, evs, dangerous))
+    return out
+
+
+def test_bet_plans_never_repeat_a_horse_within_a_column():
+    for plan in _all_plans():
+        for column in plan.groups:
+            assert len(column) == len(set(column)), f"{plan.kind}: {plan.detail}"
+
+
+def test_flow_bets_never_put_the_axis_among_its_partners():
+    """流し・フォーメーションの軸(1列目)が相手側に混ざっていないこと。"""
+    for plan in _all_plans():
+        if len(plan.groups) < 2:
+            continue
+        axis = set(plan.groups[0])
+        for column in plan.groups[1:]:
+            assert not (axis & set(column)), f"{plan.kind}: {plan.detail}"
+
+
+def test_bet_plan_detail_matches_its_groups():
+    for plan in _all_plans():
+        for column in plan.groups:
+            for umaban in column:
+                assert str(umaban) in plan.detail
+
+
+def test_every_chaos_level_produces_bets():
+    from keiba_ai.analysis.betting import build_bets
+    assert _all_plans()
+    assert build_bets(70.0, [], [], []) == []      # 出走馬が居なければ空
+
+
 @pytest.mark.parametrize("value,expected", [
     ("202605021711", "202605021711"),
     ("https://race.netkeiba.com/race/shutuba.html?race_id=202605021711", "202605021711"),

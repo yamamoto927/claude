@@ -117,7 +117,7 @@ def summarize_reasons(
         ((k, c[k]) for k in labels if k in c), key=lambda kv: -kv[1]
     )[:2]
     for key, val in highlights:
-        if val >= 58:
+        if val >= 62:
             lines.append(f"{labels[key]}が{val:.0f}と高い。")
 
     lines.extend(e.top_reasons(3))

@@ -106,7 +106,7 @@ def render_text(a: RaceAnalysis) -> str:
 
     # --- 5. 本命・対抗 --------------------------------------------------------
     out.append("")
-    out.append("【5】本命・対抗(能力7:市場3の総合力)")
+    out.append("【5】本命・対抗(能力7.5:市場2.5の総合力)")
     marks = ["◎ 本命", "○ 対抗"]
     for mark, e in zip(marks, a.favorites_pick):
         out.append(f"  {mark}  {e.horse.umaban:>2}番 {e.horse.name}"

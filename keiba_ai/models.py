@@ -308,6 +308,9 @@ class BetPlan:
     kind: str
     detail: str
     note: str = ""
+    #: 券種の「列」ごとの馬番。流しなら [軸, 相手]、ボックスなら [全頭]、
+    #: フォーメーションなら [1列目, 2列目, 3列目]。detail はこれを整形したもの。
+    groups: list[list[int]] = field(default_factory=list)
 
 
 @dataclass
